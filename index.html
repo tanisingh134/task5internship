@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#3B82F6">
+  <title>Interactive Weather App</title>
+  <link rel="icon" href="data:;base64,=">
+  <link rel="manifest" href="manifest.json">
+  <link rel="apple-touch-icon" href="/images/icon-192x192.png">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body class="light min-h-screen bg-gray-100 dark:bg-gray-900">
+  <canvas id="weather-canvas"></canvas>
+  <div id="aurora-layer" class="aurora-layer"></div>
+  <div class="container mx-auto p-4 max-w-6xl w-full">
+    <div class="nav-tabs flex justify-center gap-4 mb-4">
+      <div class="nav-tab active" data-tab="today">Today</div>
+      <div class="nav-tab" data-tab="hourly">Hourly</div>
+      <div class="nav-tab" data-tab="daily">Daily</div>
+      <div class="nav-tab" data-tab="radar">Radar</div>
+      <div class="nav-tab" data-tab="themes">Themes</div>
+      <div class="nav-tab" data-tab="widgets">Widgets</div>
+      <div class="nav-tab" data-tab="palette">Palette</div>
+      <div class="nav-tab" data-tab="time">Time</div>
+      <div class="nav-tab" data-tab="activities">Activities</div>
+      <div class="nav-tab" data-tab="journal">Journal</div>
+    </div>
+
+    <div class="weather-info bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg">
+      <div class="flex justify-between items-center mb-4">
+        <h1 class="text-2xl font-bold text-center flex-1">Interactive Weather App</h1>
+        <button id="themeToggle" class="p-2 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white">🌙 Dark Mode</button>
+      </div>
+      <div class="flex mb-4">
+        <input type="text" id="locationInput" placeholder="Enter a city" class="p-2 border rounded-l-md w-full focus:outline-none dark:text-white dark:border-gray-600" autofocus>
+        <button id="searchButton" class="p-2 bg-blue-500 text-white rounded-r-md hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">Search</button>
+      </div>
+      <div class="flex justify-center gap-4 mb-4">
+        <button id="unitToggle" class="p-2 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white">Switch to °F</button>
+        <button id="soundToggle" class="p-2 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white">🔊 Enable Sound</button>
+        <button id="moodToggle" class="p-2 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white">Set Mood</button>
+      </div>
+      <div id="alertMessages" class="mt-4 text-red-600 font-semibold text-center dark:text-red-400"></div>
+      <div id="spinner" class="spinner"></div>
+      <div class="text-center">
+        <h2 id="location" class="text-xl font-semibold"></h2>
+        <p id="temperature" class="text-lg"></p>
+        <p id="description" class="text-md"></p>
+        <svg id="weather-icon" viewBox="0 0 100 100"></svg>
+        <div id="ar-suggestion" class="mt-2"></div>
+      </div>
+    </div>
+
+    <div class="hourly-forecast-section bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mt-4 hidden">
+      <h3 class="text-lg font-semibold">Hourly Forecast</h3>
+      <div id="hourly-forecast"></div>
+    </div>
+
+    <div class="forecast-section bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mt-4 hidden">
+      <h3 class="text-lg font-semibold">6-Day Forecast</h3>
+      <div id="forecast"></div>
+    </div>
+    
+
+    <div id="cosmicMood" class="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mt-4 text-center hidden">
+      <h3 class="text-lg font-semibold">Cosmic Mood</h3>
+      <p id="cosmicMoodText" class="text-md"></p>
+    </div>
+
+    <div id="weather-map" class="mt-4 hidden"></div>
+
+    <div class="neighbors-section bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mt-4 hidden">
+      <h3 class="text-lg font-semibold">Nearby Cities Temperatures</h3>
+      <div id="neighbors-temps"></div>
+    </div>
+
+    <div class="themes-section bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mt-4 hidden">
+      <h3 class="text-lg font-semibold">Select Theme</h3>
+      <div id="themes-list" class="flex gap-2 mb-4">
+        <button class="theme-button theme-sunny" data-theme="sunny">Sunny</button>
+        <button class="theme-button theme-rainy" data-theme="rainy">Rainy</button>
+        <button class="theme-button theme-snowy" data-theme="snowy">Snowy</button>
+        <button class="theme-button theme-cloudy" data-theme="cloudy">Cloudy</button>
+      </div>
+      <div class="custom-theme-creator light">
+        <h4 class="text-md font-medium">Create Custom Theme</h4>
+        <div class="flex gap-2">
+          <input type="color" id="sky-color1" value="#87CEEB" />
+          <input type="color" id="sky-color2" value="#E0F7FA" />
+          <select id="particle-type" class="p-1 border rounded">
+            <option value="none">None</option>
+            <option value="rain">Rain</option>
+            <option value="snow">Snow</option>
+            <option value="fire">Embers</option>
+          </select>
+        </div>
+        <button id="save-custom-theme" class="mt-2 p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">Save Theme</button>
+      </div>
+    </div>
+
+    <div class="widgets-section bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mt-4 hidden">
+      <h3 class="text-lg font-semibold">Weather Widgets</h3>
+      <div class="weather-widgets grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4 mt-2">
+        <div class="weather-widget light p-2 rounded flex items-center gap-2">
+          <span class="icon">💧</span>
+          <div>
+            <h4 class="text-sm font-medium">Humidity</h4>
+            <p id="humidity">-</p>
+          </div>
+        </div>
+        <div class="weather-widget light p-2 rounded flex items-center gap-2">
+          <span class="icon">💨</span>
+          <div>
+            <h4 class="text-sm font-medium">Wind Speed</h4>
+            <p id="wind-speed">-</p>
+          </div>
+        </div>
+        <div class="weather-widget light p-2 rounded flex items-center gap-2">
+          <span class="icon">🌡️</span>
+          <div>
+            <h4 class="text-sm font-medium">Pressure</h4>
+            <p id="pressure">-</p>
+          </div>
+        </div>
+        <div class="weather-widget light p-2 rounded flex items-center gap-2">
+          <span class="icon">☀️</span>
+          <div>
+            <h4 class="text-sm font-medium">UV Index</h4>
+            <p id="uv-index">-</p>
+          </div>
+        </div>
+        <div class="weather-widget light eco-impact p-2 rounded flex items-center gap-2">
+          <span class="icon">🌍</span>
+          <div>
+            <h4 class="text-sm font-medium">Eco Impact</h4>
+            <p id="eco-impact">-</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <canvas id="temp-chart" class="mt-4 hidden"></canvas>
+
+    <div class="news-section bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mt-4 hidden">
+      <h3 class="text-lg font-semibold">Weather News</h3>
+      <div id="weather-news"></div>
+    </div>
+
+    <div class="palette-section bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mt-4 hidden" id="color-palette-section">
+      <h3 class="text-center text-lg font-bold">Weather-Inspired Color Palette</h3>
+      <div id="palette-swatches" class="flex justify-center gap-2 mt-2"></div>
+      <button id="downloadPalette" class="mt-2 p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">Download Palette</button>
+    </div>
+
+    <div class="time-section bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mt-4 hidden" id="time-section">
+      <h3 class="text-center text-lg font-bold">Local Time & Sun/Moon</h3>
+      <p id="local-time" class="text-center"></p>
+      <p id="sunrise-sunset" class="text-center"></p>
+      <canvas id="sun-moon-canvas" width="100" height="100" class="mx-auto mt-2"></canvas>
+    </div>
+
+    <div class="activity-section bg-white dark:bg-gray-800 p-6 rounded-lg shadow-lg mt-4 hidden" id="activity-section">
+      <h3 class="text-center text-lg font-bold">Activity Suggestions</h3>
+      <p id="activity-text" class="text-center"></p>
+      <button id="refreshActivity" class="mt-2 p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">New Suggestion</button>
+    </div>
+
+    <div id="mood-input" class="mt-4 text-center hidden">
+      <select id="mood-select" class="p-2 border rounded">
+        <option value="happy">Happy 😊</option>
+        <option value="neutral">Neutral 🙂</option>
+        <option value="stressed">Stressed 😓</option>
+      </select>
+      <button id="save-mood" class="p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700">Save Mood</button>
+    </div>
+  </div>
+
+  <button class="cloud-editor-toggle fixed bottom-4 right-4 p-2 bg-gray-200 rounded-md hover:bg-gray-300 dark:bg-gray-700 dark:hover:bg-gray-600 dark:text-white" id="cloud-editor-toggle">▼</button>
+  <div class="cloud-editor light fixed bottom-16 right-4 p-4 bg-white dark:bg-gray-800 rounded-lg shadow-lg hidden">
+    <h4 class="text-md font-medium">Cloud Editor</h4>
+    <input type="range" id="cloud-size" min="20" max="100" value="50" class="w-full" />
+    <input type="range" id="cloud-density" min="0.1" max="1" step="0.1" value="0.5" class="w-full mt-2" />
+    <input type="color" id="cloud-color" value="#FFFFFF" class="w-full mt-2" />
+    <button id="add-cloud" class="mt-2 p-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 dark:bg-blue-600 dark:hover:bg-blue-700 w-full">Add Cloud</button>
+    <button id="clear-clouds" class="mt-2 p-2 bg-red-500 text-white rounded-md hover:bg-red-600 dark:bg-red-600 dark:hover:bg-red-700 w-full">Clear Clouds</button>
+  </div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@3.9.1/dist/chart.min.js"></script>
+  <script src="script.js"></script>
+</body>
+</html>

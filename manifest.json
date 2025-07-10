@@ -1,0 +1,43 @@
+{
+  "id": "/index.html",
+  "name": "Weather App",
+  "short_name": "Weather",
+  "description": "A feature-rich weather forecast application",
+  "start_url": "/index.html",
+  "display": "standalone",
+  "background_color": "#F3F4F6",
+  "theme_color": "#3B82F6",
+  "orientation": "any",
+  "form-factor": "wide",
+  "screenshots": [
+    {
+      "src": "screenshots/screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide"
+    },
+    {
+      "src": "screenshots/screenshot-narrow.png",
+      "sizes": "360x640",
+      "type": "image/png",
+      "form_factor": "narrow"
+    }
+  ],
+  "icons": [
+    {
+      "src": "icons/icon-144x144.png",
+      "sizes": "144x144",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-192x192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "icons/icon-512x512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
